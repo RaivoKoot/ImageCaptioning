@@ -1,6 +1,6 @@
 import torchtext
 from collections import Counter
-
+import os
 
 class Vocab:
     """
@@ -27,15 +27,20 @@ class Vocab:
         """
         self.counter.update(self.splitter(sentence))
 
-    def build_vocab(self, top_k):
+    def build_vocab(self, top_k, ignore_words=['.',  ',']):
         """
         Only keep the top_k words in the vocab.
         :param top_k: how many words to keep
         """
+        for word in ignore_words:
+            if word in self.counter:
+                del self.counter[word]
+
         self.index2word[self.UNKNOWN_WORD_INDEX] = '<unknown>'
         self.word2index['<unknown>'] = self.UNKNOWN_WORD_INDEX
 
         words = self.counter.most_common(top_k)
+        print(words)
         for index, (word, _) in enumerate(words):
             self.word2index[word] = index+1
             self.index2word[index+1] = word
@@ -58,7 +63,8 @@ class Vocab:
         a text file 'word2index.txt' at root_path.
         :param root_path: folder at which to save the txt file.
         """
-        with open(root_path + 'word2index.txt', 'a') as file:
+        filepath = os.path.join(root_path, 'word2index.txt')
+        with open(filepath, 'a') as file:
             for word in self.word2index.keys():
                 line = f"{word} {self.word2index[word]}\n"
                 file.write(line)
@@ -79,3 +85,26 @@ class Vocab:
 
                 self.word2index[word] = index
                 self.index2word[index] = word
+
+if __name__ == '__main__':
+    """
+    build and save vocab
+    """
+    vocab = Vocab()
+    TOP_K = 5000
+    filepath = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'train_list.txt')
+
+    with open(filepath) as file:
+        for i, line in enumerate(file):
+            if i == 0:
+                continue  # header line
+            caption = line.strip().split(" xSEPERATORx ")[2]  # first two words are image_id and id
+            caption = '<sos> ' + caption + ' <eos>'
+            vocab.add_sentence(caption)
+
+    #print(len(vocab.counter))
+    #print(vocab.counter.most_common(TOP_K))
+
+    root = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco')
+    vocab.build_vocab(TOP_K)
+    vocab.save_vocab(root)

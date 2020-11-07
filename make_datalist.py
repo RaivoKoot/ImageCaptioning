@@ -9,5 +9,7 @@ with open(label_file) as file:
     with open(out_file, 'a') as out:
         out.write("image_id\tid\tcaption\n")
         for sample in data:
-            description = str(sample['image_id']) + " " + str(sample['id']) + " " + sample['caption'] + "\n"
+            if '\n' in sample['caption'].strip():
+                continue  # broken caption
+            description = str(sample['image_id']) + " xSEPERATORx " + str(sample['id']) + " xSEPERATORx " + sample['caption'].strip() + "\n"
             out.write(description)
