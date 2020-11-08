@@ -83,8 +83,8 @@ class Vocab:
                 line = line.strip().split()
                 word, index = line[0], line[1]
 
-                self.word2index[word] = index
-                self.index2word[index] = word
+                self.word2index[word] = int(index)
+                self.index2word[int(index)] = word
 
 if __name__ == '__main__':
     """
