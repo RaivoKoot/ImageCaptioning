@@ -1,5 +1,6 @@
 import torchtext
 from collections import Counter
+from nltk.tokenize import RegexpTokenizer
 import os
 
 class Vocab:
@@ -9,7 +10,7 @@ class Vocab:
     words and assumes custom <sos> and <eos> words are part of sentences during word counting
     with self.add_sentence().
     """
-    def __init__(self, sentence_splitter=torchtext.data.utils.get_tokenizer('basic_english')):
+    def __init__(self, sentence_splitter=None):
         """
         :param sentence_splitter: a function that takes in a string and returns a list
         of words.
@@ -17,30 +18,35 @@ class Vocab:
         self.counter = Counter()
         self.word2index = dict()
         self.index2word = dict()
-        self.splitter = sentence_splitter
         self.UNKNOWN_WORD_INDEX = 0
+
+        if sentence_splitter is None:
+            # matches sequences of characters including ones
+            # surrounded by < and >
+            word_regex = r'(?:\w+|<\w+>)'
+            sentence_splitter = RegexpTokenizer(word_regex).tokenize
+
+        self.splitter = sentence_splitter
 
     def add_sentence(self, sentence):
         """
         Update word counts from sentence after splitting its words.
         :param sentence: a single string.
+        :param ignore_words: a list of words that you want to have removed from you
         """
         self.counter.update(self.splitter(sentence))
 
-    def build_vocab(self, top_k, ignore_words=['.',  ',']):
+    def build_vocab(self, top_k):
         """
         Only keep the top_k words in the vocab.
         :param top_k: how many words to keep
         """
-        for word in ignore_words:
-            if word in self.counter:
-                del self.counter[word]
 
         self.index2word[self.UNKNOWN_WORD_INDEX] = '<unknown>'
         self.word2index['<unknown>'] = self.UNKNOWN_WORD_INDEX
 
         words = self.counter.most_common(top_k)
-        print(words)
+
         for index, (word, _) in enumerate(words):
             self.word2index[word] = index+1
             self.index2word[index+1] = word
