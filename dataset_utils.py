@@ -1,4 +1,3 @@
-import torchtext
 from collections import Counter
 from nltk.tokenize import RegexpTokenizer
 import os
@@ -98,7 +97,7 @@ if __name__ == '__main__':
     """
     vocab = Vocab()
     TOP_K = 5000
-    filepath = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'train_list.txt')
+    filepath = os.path.join(os.getcwd(), 'data', 'annotations', 'train_list.txt')
 
     with open(filepath) as file:
         for i, line in enumerate(file):
@@ -111,6 +110,6 @@ if __name__ == '__main__':
     #print(len(vocab.counter))
     #print(vocab.counter.most_common(TOP_K))
 
-    root = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco')
+    root = os.path.join(os.getcwd(), 'data')
     vocab.build_vocab(TOP_K)
     vocab.save_vocab(root)

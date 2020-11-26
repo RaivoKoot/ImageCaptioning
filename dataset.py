@@ -137,13 +137,13 @@ def denormalize(image):
 if __name__ == '__main__':
     """ 1) load vocab object that can do word2index, index2word, and split sentences into words """
     vocab = Vocab()
-    vocab_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'word2index.txt')
+    vocab_file = os.path.join(os.getcwd(), 'data', 'word2index.txt')
     vocab.load_vocab(vocab_file)
 
     """ 2) txt files that contain a row for each sample """
-    sample_list_train = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'train_list.txt')
-    sample_list_val = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'val_list.txt')
-    images_root = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'images')
+    sample_list_train = os.path.join(os.getcwd(), 'data', 'annotations', 'train_list.txt')
+    sample_list_val = os.path.join(os.getcwd(), 'data', 'annotations', 'val_list.txt')
+    images_root = os.path.join(os.getcwd(), 'data', 'train2014', 'images')
 
     """ 3) initialize dataset objects """
     train_data = ImageCaptionDataset(sample_list_train, vocab, images_root, transform=preprocessing_transforms())
@@ -163,8 +163,9 @@ if __name__ == '__main__':
         pin_memory=True,
     )
 
+    print('here')
     x, y = next(iter(train_loader))
-
+    print('not here')
     print(x.size())
     print(y.size())
 

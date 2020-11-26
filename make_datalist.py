@@ -1,8 +1,8 @@
 import json
 import os
 
-label_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'captions_val2014.json')
-out_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'val_list.txt')
+label_file = os.path.join(os.getcwd(), 'data', 'annotations', 'captions_val2014.json')
+out_file = os.path.join(os.getcwd(), 'data', 'annotations', 'val_list.txt')
 with open(label_file) as file:
     data = json.load(file)['annotations']  # list where each entry is dict with image_id, id, caption
 
