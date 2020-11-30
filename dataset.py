@@ -50,11 +50,11 @@ class ImageCaptionDataset():
         img_name = self.img_template.format(sample['image_id'])
         img_name = os.path.join(self.images_root, img_name)
 
-        try:
-            image = Image.open(img_name).convert('RGB')
-        except FileNotFoundError:
-            print(f"WARNING: Could not find image '{img_name}'. ")
-            image = Image.new('RGB', (299, 299))
+        #try:
+        image = Image.open(img_name).convert('RGB')
+        #except FileNotFoundError:
+        #    print(f"WARNING: Could not find image '{img_name}'. ")
+        #    image = Image.new('RGB', (299, 299))
 
         if self.transform:
             image = self.transform(image)
