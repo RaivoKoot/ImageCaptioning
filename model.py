@@ -15,6 +15,7 @@ class ImageEncoder(nn.Module):
         self.feature_extractor.dropout = nn.Identity()
         self.feature_extractor.fc = nn.Identity()
         INCEPTIONV3_OUT_DIM = 2048
+        self.IMAGE_FEATS = INCEPTIONV3_OUT_DIM
         self.out = nn.Linear(INCEPTIONV3_OUT_DIM, out_dim)
 
     def forward(self, image_batch):
@@ -42,7 +43,7 @@ class Attention(nn.Module):
         super(Attention, self).__init__()
         self.query_proj = nn.Linear(query_dim, attention_dim)
         self.context_proj = nn.Linear(context_dim, attention_dim)
-        self.scaling_term = torch.Tensor([1/math.sqrt(attention_dim)])
+        self.register_buffer('scaling_term', torch.Tensor([1/math.sqrt(attention_dim)]))
 
     def forward(self, features, query):
         """
@@ -158,7 +159,6 @@ class CaptionRNN(nn.Module):
 
         output = self.head(output)
         return output, hidden_state, att_weights
-
 
 if __name__ == '__main__':
     net = CaptionRNN(num_classes=3, word_emb_dim=256, img_emb_dim=256, hidden_dim=512)

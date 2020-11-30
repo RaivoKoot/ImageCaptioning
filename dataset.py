@@ -5,6 +5,7 @@ from dataset_utils import Vocab
 from collections import OrderedDict
 from random import shuffle
 from torchvision import transforms
+import random
 
 class ImageCaptionDataset():
     def __init__(self, sample_list_path, vocab, images_root, transform,
@@ -49,7 +50,12 @@ class ImageCaptionDataset():
         img_name = self.img_template.format(sample['image_id'])
         img_name = os.path.join(self.images_root, img_name)
 
-        image = Image.open(img_name).convert('RGB')
+        try:
+            image = Image.open(img_name).convert('RGB')
+        except FileNotFoundError:
+            print(f"WARNING: Could not find image '{img_name}'. ")
+            image = Image.new('RGB', (299, 299))
+
         if self.transform:
             image = self.transform(image)
 
@@ -117,8 +123,8 @@ class VariableSeqLenBatchSampler(torch.utils.data.Sampler):
 
 def preprocessing_transforms():
     return transforms.Compose([
-        transforms.Resize(299),
-        transforms.CenterCrop(299),
+        transforms.Resize((299,299)),
+        #transforms.CenterCrop(299),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -134,16 +140,24 @@ def denormalize(image):
     )
     return (inv_normalize(image) * 255.).type(torch.uint8).permute(1, 2, 0).numpy()
 
+def take_n(dataset, n):
+    """
+    Given a dataset with x number of samples, remove random samples from the dataset
+    so that n samples are left.
+    """
+    dataset.samples = random.choices(dataset.samples, k=n)
+    return dataset
+
 if __name__ == '__main__':
     """ 1) load vocab object that can do word2index, index2word, and split sentences into words """
     vocab = Vocab()
-    vocab_file = os.path.join(os.getcwd(), 'data', 'word2index.txt')
+    vocab_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'word2index.txt')
     vocab.load_vocab(vocab_file)
 
     """ 2) txt files that contain a row for each sample """
-    sample_list_train = os.path.join(os.getcwd(), 'data', 'annotations', 'train_list.txt')
-    sample_list_val = os.path.join(os.getcwd(), 'data', 'annotations', 'val_list.txt')
-    images_root = os.path.join(os.getcwd(), 'data', 'train2014', 'images')
+    sample_list_train = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'train_list.txt')
+    sample_list_val = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'val_list.txt')
+    images_root = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'images')
 
     """ 3) initialize dataset objects """
     train_data = ImageCaptionDataset(sample_list_train, vocab, images_root, transform=preprocessing_transforms())
@@ -163,11 +177,9 @@ if __name__ == '__main__':
         pin_memory=True,
     )
 
-    print('here')
     x, y = next(iter(train_loader))
-    print('not here')
-    print(x.size())
-    print(y.size())
+    print(x.size(), x.dtype)
+    print(y.size(), y.dtype)
 
     import matplotlib.pyplot as plt
 

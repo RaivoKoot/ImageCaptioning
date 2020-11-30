@@ -1,10 +1,10 @@
 from dataset_utils import Vocab
 from dataset import ImageCaptionDataset, VariableSeqLenBatchSampler, preprocessing_transforms, denormalize, take_n
-from trainer import run_epoch
+from trainer import generate_caption
 from model import ImageEncoder, CaptionRNN
+import matplotlib.pyplot as plt
 import os
 import torch
-import logging
 
 
 if __name__ == '__main__':
@@ -48,9 +48,9 @@ if __name__ == '__main__':
 
     """ 7) Create Model """
     VOCAB_SIZE = len(vocab.word2index)
-    IMAGE_EMB_DIM = 512
-    WORD_EMB_DIM = 512
-    HIDDEN_DIM = 1024
+    IMAGE_EMB_DIM = 256
+    WORD_EMB_DIM = 256
+    HIDDEN_DIM = 512
     word_embedding = torch.nn.Embedding(
         num_embeddings=VOCAB_SIZE,
         embedding_dim=WORD_EMB_DIM,
@@ -62,20 +62,13 @@ if __name__ == '__main__':
         img_emb_dim=IMAGE_EMB_DIM,
         hidden_dim=HIDDEN_DIM
     )
+    word_embedding.eval()
+    image_encoder.eval()
+    image_decoder.eval()
 
-    """ 8) Create Optimizer and Loss Function """
-    LR = 0.001
-    WEIGHT_DECAY = 0.
-    loss_fn = torch.nn.NLLLoss()
-    parameters = list(image_decoder.parameters()) + list(word_embedding.parameters())
-    optim = torch.optim.Adam(
-        params=parameters,
-        lr=LR,
-        weight_decay=WEIGHT_DECAY
-    )
 
     """ 9) Load Weights """
-    LOAD_WEIGHTS = False
+    LOAD_WEIGHTS = True
     EMBEDDING_WEIGHT_FILE = 'checkpoints/BIGDATASET-weights-embedding-epoch-3.pt'
     ENCODER_WEIGHT_FILE = 'checkpoints/BIGDATASET-weights-encoder-epoch-3.pt'
     DECODER_WEIGHT_FILE = 'checkpoints/BIGDATASET-weights-decoder-epoch-3.pt'
@@ -88,33 +81,20 @@ if __name__ == '__main__':
     """ 10) Device Setup"""
     device = 'cuda:1'
     device = torch.device(device)
+
     word_embedding = word_embedding.to(device)
     image_encoder = image_encoder.to(device)
     image_decoder = image_decoder.to(device)
 
-    """ 11) text file logging """
-    log_filename = f"logs/training_log-BIGDATASET-BIGMODEL.log"
-    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
+    print(vocab.word_to_index('yooooo'))
 
-    EPOCHS = 100
-    START_EPOCH = 0
+    for i, batch in enumerate(val_loader):
+        image_batch, word_ids_batch = batch[0].to(device), batch[1].to(device)
 
-    print("Beginning Training")
-    for epoch in range(START_EPOCH, EPOCHS):
-        # TRAIN
-        results = run_epoch(epoch, train_loader, image_encoder, image_decoder, word_embedding, loss_fn, optim, device,
-                            train=True)
-        print(results.to_string(-1))
-        logging.debug(results.to_string(-1))
-
-        # VAL
-        results = run_epoch(epoch, val_loader, image_encoder, image_decoder, word_embedding, loss_fn, optim, device,
-                            train=False)
-        print('Val ' + results.to_string(-1))
-        logging.debug('Val ' + results.to_string(-1))
-
-        # SAVE
-        torch.save(word_embedding.state_dict(), f"checkpoints/BIGMODEL-BIGDATASET-weights-embedding-epoch-{epoch}.pt")
-        torch.save(image_encoder.state_dict(), f"checkpoints/BIGMODEL-BIGDATASET-weights-encoder-epoch-{epoch}.pt")
-        torch.save(image_decoder.state_dict(), f"checkpoints/BIGMODEL-BIGDATASET-weights-decoder-epoch-{epoch}.pt")
-
+        for image in image_batch:
+            sentence = generate_caption(image, image_encoder, image_decoder, word_embedding, vocab, device)
+            image = denormalize(image.cpu())
+            plt.imshow(image)
+            plt.title(sentence)
+            plt.show()
+            plt.pause(1)
