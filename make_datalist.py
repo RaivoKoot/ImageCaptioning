@@ -1,8 +1,12 @@
 import json
 import os
-
+"""
+From the json annotation file of the COCO dataset that you download online, read only the captions from it and put
+those into a convenient txt file instead.
+"""
 label_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'captions_val2014.json')
 out_file = os.path.join(os.path.expanduser('~'), 'data', 'raivo', 'coco', 'val_list.txt')
+
 with open(label_file) as file:
     data = json.load(file)['annotations']  # list where each entry is dict with image_id, id, caption
 

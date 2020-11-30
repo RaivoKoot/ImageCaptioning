@@ -1,4 +1,3 @@
-import torchtext
 from collections import Counter
 from nltk.tokenize import RegexpTokenizer
 import os
